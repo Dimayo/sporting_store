@@ -60,6 +60,65 @@ model = GradientBoostingClassifier(subsample=0.4, n_estimators=300, min_samples_
                                    criterion='squared_error').fit(x_train, y_train)
 df_test['gender'] = model.predict(x_test)
 ```
+В таблице с данными о покупках также были заполнены пропуски и обработаны текстовые признаки:
+```
+df_purch['product'] = df_purch['product'].apply(lambda x: " ".join(re.findall('[А-Яа-я]{3,20}', x)).lower())
+df_purch['colour'] = df_purch['colour'].apply(lambda x: x.split('/')[0].lower())
+```
+### Оценка А/Б теста
+Загружен файл, который содержит id клиентов учавствовавших в А/Б тесте:
+```
+with open('data/ids_first_company_positive.txt') as f:
+    positive = f.read()
+```
+Файл был обработан для получения только необходимых данных:
+```
+elem_list = re.split(';|,| ', positive)
 
+positive_id = []
+
+for i in elem_list:
+    if i.isdigit():
+        positive_id.append(int(i))
+```
+Такие же действия были произведены с файлом, который содержит id клиентов из контрольной группы. Далее была произведена группировка по id, чтобы получить выручку на одного клиента:
+```
+arpu_group = df_test.groupby('id', as_index=False).agg({'cost':'sum'})
+```
+И созданы контрольная и тестовая группа:
+```
+positive_arpu = arpu_group.loc[arpu_group['id'].isin(positive_id), :]
+negative_arpu = arpu_group.loc[arpu_group['id'].isin(negative_id), :]
+
+```
+Группы были проверены на несоответствие коэффициента выборки (SRM):
+```
+test = len(positive_arpu)
+control = len(negative_arpu)
+overall = test + control
+
+observed = [test, control]
+expected = [overall / 2, overall / 2]
+
+chi = stats.chisquare(observed, f_exp=expected)
+print(chi)
+
+if chi[1] < 0.01:
+    print('SRM присутствует')
+else:
+    print('SRM отсутсвует')
+
+```
+Было протестировано несколько гипотез, нормальность распределения проверялась с помощью теста Шапиро-Уилка или Колмогорова-Смирнова. Так как распределения не являются нормальными, а выборки независимы, для проверки гипотезы о среднем использовался критерий Манна-Уитни:
+```
+mann = stats.mannwhitneyu(positive_arpu['cost'], negative_arpu['cost'])
+print(mann)
+
+if mann[1] < 0.05:
+    print('Есть статистически значимая разница')
+else:
+    print('Статистически значимой разницы нет')
+
+```
 
 ## Результат
