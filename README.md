@@ -47,22 +47,25 @@ df_clients = pd.concat([df_pers, df_lost])
 Созданы визуализации нескольких распределений из которых можно сделать вывод о том, что распределение возраста клиентов близко к нормальному:
 
 <img src="https://github.com/Dimayo/sporting_store/assets/44707838/d825e0ff-7644-4410-b0d1-2ead3882d592" width="600"> <br> <br>
-Мужчины составляют большую часть клиентов:
+Клиенты преимущественно мужского пола:
 
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/7f59a9a8-fa34-40c3-b708-af643d5918a4" width="600"> <br> <br>
+<img src="https://github.com/Dimayo/sporting_store/assets/44707838/4202686d-3197-49fb-b370-0b1cbb81df4b" width="600"> <br> <br>
+
 Клиенты магазина имеют преимущественно среднее образование:
 
 <img src="https://github.com/Dimayo/sporting_store/assets/44707838/d021fa1b-d995-4328-8c73-3b04388504c1" width="600"> <br> <br>
 Так как признак пол в файле с утерянными данными не был заполнен, он был заполнен с помощью модели градиентного бустинга после предварительного подбора гиперпараметров:
 ```
-model = GradientBoostingClassifier(subsample=0.4, n_estimators=300, min_samples_split=16, min_samples_leaf=2, 
-                                   max_features='sqrt', max_depth=34, loss= 'exponential', learning_rate=1,
+model = GradientBoostingClassifier(subsample=0.4, n_estimators=300, min_samples_split=16,
+                                   min_samples_leaf=2, max_features='sqrt', max_depth=34,
+                                   loss= 'exponential', learning_rate=1,
                                    criterion='squared_error').fit(x_train, y_train)
 df_test['gender'] = model.predict(x_test)
 ```
 В таблице с данными о покупках также были заполнены пропуски и обработаны текстовые признаки:
 ```
-df_purch['product'] = df_purch['product'].apply(lambda x: " ".join(re.findall('[А-Яа-я]{3,20}', x)).lower())
+df_purch['product'] = df_purch['product'].apply(lambda x: " "
+                                                .join(re.findall('[А-Яа-я]{3,20}', x)).lower())
 df_purch['colour'] = df_purch['colour'].apply(lambda x: x.split('/')[0].lower())
 ```
 ### Оценка А/Б теста
@@ -120,5 +123,41 @@ else:
     print('Статистически значимой разницы нет')
 
 ```
+### Кластеризация
+Создана новая таблица с группировкой по id:
+```
+df_g = df_purch.groupby('id', as_index=False).agg({'cost':'sum',
+                                                   'product': pd.Series.mode,
+                                                   'colour': pd.Series.mode,
+                                                   'product_sex': pd.Series.mode,
+                                                   'base_sale':'mean',
+                                                   'dt':'max'
+                                                   })
+
+```
+
+Изменены названия признаков:
+```
+dict = {'cost': 'cost_sum',
+        'product': 'product_mode',
+        'colour': 'color_mode',
+        'product_sex': 'product_sex_mode',
+        'base_sale': 'best_sale_mean',
+        'dt': 'dt_max'}
+
+df_g = df_g.rename(columns=dict)
+```
+Преобразованы элементы признаков, которые состоят из списков:
+```
+mode_columns = ['product_mode', 'color_mode', 'product_sex_mode']
+
+for column in mode_columns:
+    df_g[column] = df_g[column].apply(lambda x: x[0] if type(x) == np.ndarray else x)
+```
+Датафрейм объединен с данными о клиентах:
+```
+df = pd.merge(left=df_clients, right=df_g, on='id', how='inner')
+```
+
 
 ## Результат
