@@ -158,6 +158,77 @@ for column in mode_columns:
 ```
 df = pd.merge(left=df_clients, right=df_g, on='id', how='inner')
 ```
+Числовые признаки нормализованы с помощью Standart Scaler:
+```
+num_columns = ['age', 'personal_coef','cost_sum', 'best_sale_mean','dt_max']
+scaler = StandardScaler()
+df[num_columns] = scaler.fit_transform(df[num_columns])
+```
+Для кластеризации выбран алгоритм Kprototypes, так как датафрейм содержит категориальные данные. Оптимальное число кластеров найдено с помощью метода "локтя":
+```
+n_clusters = list(range(2,8))
+cost = []
 
+for n in n_clusters:
+    kproto = KPrototypes(n_clusters=n, init='Cao', n_jobs=-1)
+    kproto.fit_predict(df, categorical=[0,2,3,4,7,8,9])
+    cost.append(kproto.cost_)
+```
+<img src="https://github.com/Dimayo/sporting_store/assets/44707838/48e7bb24-c836-4203-b382-096f3e5b18e1" width="600"> <br> <br>
+
+### Модель склонности клиента к покупке определенного товара
+Была создана таблица с id клиентов, участвовавшими в первой и второй маркетинговых компаниях и продуктами, которые они покупали:
+```
+df_first = df_purch[(df_purch['dt'] >= 5) & (df_purch['dt'] < 17)]
+product_group = df_first.groupby('id', as_index=False).agg({'product': pd.Series.mode})
+first_camp = product_group.loc[product_group['id'].isin(positive_id), :]
+first_camp['product'] = first_camp['product'].apply(lambda x: x[0] if type(x) == np.ndarray else x)
+
+df_second = df_purch[(df_purch['dt'] == 15) | (df_purch['dt'] == 45)]
+second_camp = df_second.groupby('id', as_index=False).agg({'product': pd.Series.mode})
+second_camp['product'] = second_camp['product'].apply(lambda x: x[0] if type(x) == np.ndarray else x)
+```
+Далее таблицы о купленных продуктах были объединены с информацией о клиентах:
+```
+first_df = pd.merge(left=df_clients, right = first_camp, on='id', how='inner')
+first_df.shape
+
+second_df = pd.merge(left=df_clients, right = second_camp, on='id', how='inner')
+second_df = second_df[second_df.city == 1134]
+second_df.shape
+```
+Датафреймы с информацией о клиентах и купленных товарах в первой и второй маркетинговых компаниях были объединены между собой:
+```
+train = first_df.append(second_df)
+```
+Были удалены дубликаты и упрощено название товаров для сокращения количества категорий:
+```
+train['product'] = train['product'].apply(lambda x: x.split(' ')[0])
+```
+Создан тестовый датафрейм на котором необходимо применить модель:
+```
+test = df_clients[(df_clients.city == 1188) & (df_clients.country == 32)]
+```
+Далее был осуществлен подбор гиперпараметров модели с помощью Randomized Search, и обучена модель показавшая лучшие результаты:
+```
+params = {'n_estimators' : [300, 500, 700],
+          'max_depth': np.arange(10, 60, 4),
+          'min_samples_leaf': np.arange(1, 10, 1),
+          'min_samples_split': np.arange(2, 20, 2),
+          'class_weight': ('balanced', None)}
+
+rs = RandomizedSearchCV(rfc, params, cv=kf, scoring='f1_micro', n_jobs=-1, error_score='raise')
+rs.fit(x_train, y_train)
+
+print('Best params: ', rs.best_params_)
+print('Best score: ', rs.best_score_)
+```
+Сделано предсказание на тестовой выборке и создан новый признак product:
+```
+model_pred = model.predict(x_test)
+x_test['product'] = model_pred
+```
 
 ## Результат
+### Оценка А/Б теста
+
