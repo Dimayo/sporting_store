@@ -47,13 +47,10 @@ df_clients = pd.concat([df_pers, df_lost])
 Созданы визуализации нескольких распределений из которых можно сделать вывод о том, что распределение возраста клиентов близко к нормальному:
 
 <img src="https://github.com/Dimayo/sporting_store/assets/44707838/d825e0ff-7644-4410-b0d1-2ead3882d592" width="600"> <br> <br>
-Клиенты преимущественно мужского пола:
+Клиенты преимущественно мужского пола и имеют среднее образование:
 
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/4202686d-3197-49fb-b370-0b1cbb81df4b" width="600"> <br> <br>
+<img src="https://github.com/Dimayo/sporting_store/assets/44707838/8df20bd8-d4e7-41d5-9e85-81831ee8667a" width="600"> <br> <br>
 
-Клиенты магазина имеют преимущественно среднее образование:
-
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/d021fa1b-d995-4328-8c73-3b04388504c1" width="600"> <br> <br>
 Так как признак пол в файле с утерянными данными не был заполнен, он был заполнен с помощью модели градиентного бустинга после предварительного подбора гиперпараметров:
 ```
 model = GradientBoostingClassifier(subsample=0.4, n_estimators=300, min_samples_split=16,
