@@ -94,24 +94,7 @@ positive_arpu = arpu_group.loc[arpu_group['id'].isin(positive_id), :]
 negative_arpu = arpu_group.loc[arpu_group['id'].isin(negative_id), :]
 
 ```
-Группы были проверены на несоответствие коэффициента выборки (SRM):
-```
-test = len(positive_arpu)
-control = len(negative_arpu)
-overall = test + control
 
-observed = [test, control]
-expected = [overall / 2, overall / 2]
-
-chi = stats.chisquare(observed, f_exp=expected)
-print(chi)
-
-if chi[1] < 0.01:
-    print('SRM присутствует')
-else:
-    print('SRM отсутсвует')
-
-```
 Было протестировано несколько гипотез, нормальность распределения проверялась с помощью теста Шапиро-Уилка или Колмогорова-Смирнова. Так как распределения не являются нормальными, а выборки независимы, для проверки гипотезы о среднем использовался критерий Манна-Уитни:
 ```
 mann = stats.mannwhitneyu(positive_arpu['cost'], negative_arpu['cost'])
@@ -233,20 +216,18 @@ x_test['product'] = model_pred
 ### Оценка А/Б теста
 После проверки гипотез были получены следующие результаты:
 
-* Есть статистически значимая разница между средней выручкой на одного пользователя в тестовой и контрольной группах
+Есть статистически значимая разница между средней выручкой на одного пользователя в тестовой и контрольной группах
   
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/f10f80e9-6d8c-4049-90da-2e17975da7b3" width="600"> <br> <br>
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/d882ed3a-f1d6-4eb9-821b-c7452fa1d29e" width="600"> <br> <br>
+<img src="https://github.com/Dimayo/sporting_store/assets/44707838/6790d81e-c4c0-443e-a096-3f9f2994a34b" width="600"> <br> <br>
 
-* Есть статистически значимая разница между средним чеком в тестовой и контрольной группах
+Есть статистически значимая разница между средним чеком в тестовой и контрольной группах
 
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/e8f2369e-2879-4972-9c9a-361960a90e5d" width="600"> <br> <br>
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/cd7d84ee-ee97-49df-907e-b6daa7f2dbcc" width="600"> <br> <br>
+<img src="https://github.com/Dimayo/sporting_store/assets/44707838/317e6a33-f942-444e-8479-b87bcfc85f93" width="600"> <br> <br>
 
-* Есть статистически значимая разница между количеством купленных товаров на одного клиента за время проведения маркетинговой кампании в тестовой и контрольной группах
+Есть статистически значимая разница между количеством купленных товаров на одного клиента за время проведения маркетинговой кампании в тестовой и контрольной группах
 
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/832263c2-ed9a-4d67-8fe6-70463d7eef38" width="600"> <br> <br>
-<img src="https://github.com/Dimayo/sporting_store/assets/44707838/5e4252ec-5d8b-4211-8a95-1b132625d4a9" width="600"> <br> <br>
+<img src="https://github.com/Dimayo/sporting_store/assets/44707838/2666f03b-598a-494f-9e3d-432b73d0a202" width="600"> <br> <br>
+
 
 **Вывод**: по итогу проведенной первой маркетинговой компании средняя выручка на одного пользователя в тестовой группе выше на 25% чем в контрольной, средний чек выше на 6% и среднее количество купленных товаров одним клиентом выше на 31%. Из этих результатов можно сделать вывод, что маркетинговая компания была эффективна.
 
