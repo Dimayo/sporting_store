@@ -1,5 +1,5 @@
 # Оценка А/Б теста и кластеризация для магазина спортивных товаров
-https://github.com/Dimayo/sporting_store/blob/main/research.ipynb <br>
+[Код проекта в jupyter notebook](https://github.com/Dimayo/sporting_store/blob/main/research.ipynb)<br>
 Библиотеки python: pandas, sklearn, matplotlib, sqlalchemy, scipy, seaborn, numpy, re, kmodes
 
 ## Цель проекта
